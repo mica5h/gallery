@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Runtime data (uploaded images + JSON store, including seeded credentials)
+uploads/*
+!uploads/.gitkeep
+data/*.json
+
+# Env / secrets
+.env
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.log

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery</title>
+  <meta name="description" content="A photo gallery." />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="#top" class="nav__brand" id="navBrand">Gallery</a>
+      <ul class="nav__links">
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#words">Words</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="/admin" class="nav__admin">Admin</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- Section 1: gallery info / hero -->
+    <section id="info" class="hero">
+      <h1 id="galleryTitle">Gallery</h1>
+      <p class="hero__intro" id="galleryIntro"></p>
+      <a href="#gallery" class="btn">View the gallery ↓</a>
+    </section>
+
+    <!-- Section 2: items -->
+    <section id="gallery" class="section">
+      <h2>Pictures</h2>
+      <div class="grid" id="grid">
+        <p class="muted" id="emptyState" hidden>No pictures yet — add some from the admin panel.</p>
+      </div>
+    </section>
+
+    <!-- Section 3: nice words -->
+    <section id="words" class="section words">
+      <h2>A few words</h2>
+      <p id="niceWords" class="words__text"></p>
+    </section>
+  </main>
+
+  <!-- Footer: contact -->
+  <footer id="contact" class="site-footer">
+    <h2>Contact</h2>
+    <p id="contactNote" class="footer__note"></p>
+    <p id="contactDetails" class="footer__details"></p>
+    <p class="footer__copy">&copy; <span id="year"></span> <span id="footerName"></span></p>
+  </footer>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" hidden>
+    <button class="lightbox__close" id="lightboxClose" aria-label="Close">&times;</button>
+    <img id="lightboxImg" alt="" />
+    <p id="lightboxCaption" class="lightbox__caption"></p>
+  </div>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

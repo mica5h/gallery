@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery — Admin</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="/" class="nav__brand">Gallery</a>
+      <ul class="nav__links">
+        <li><a href="/">← Back to site</a></li>
+        <li id="logoutWrap" hidden><button id="logoutBtn" class="linkbtn">Log out</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="admin">
+    <!-- Login -->
+    <section id="loginView" class="panel" hidden>
+      <h1>Admin login</h1>
+      <form id="loginForm" class="form">
+        <label>Username <input type="text" id="username" autocomplete="username" required /></label>
+        <label>Password <input type="password" id="password" autocomplete="current-password" required /></label>
+        <button type="submit" class="btn">Log in</button>
+        <p class="error" id="loginError" hidden></p>
+      </form>
+    </section>
+
+    <!-- Admin dashboard -->
+    <section id="dashView" hidden>
+      <h1>Manage gallery</h1>
+
+      <!-- Gallery info -->
+      <div class="panel">
+        <h2>Gallery info</h2>
+        <form id="infoForm" class="form">
+          <label>Title <input type="text" id="infoTitle" /></label>
+          <label>Intro <textarea id="infoIntro" rows="3"></textarea></label>
+          <label>A few words <textarea id="infoWords" rows="3"></textarea></label>
+          <fieldset>
+            <legend>Contact</legend>
+            <label>Name <input type="text" id="contactName" /></label>
+            <label>Email <input type="email" id="contactEmail" /></label>
+            <label>Note <textarea id="contactNote" rows="2"></textarea></label>
+          </fieldset>
+          <button type="submit" class="btn">Save info</button>
+          <span class="saved" id="infoSaved" hidden>Saved ✓</span>
+        </form>
+      </div>
+
+      <!-- Upload -->
+      <div class="panel">
+        <h2>Add a picture</h2>
+        <form id="uploadForm" class="form">
+          <label>Image <input type="file" id="imageFile" accept="image/*" required /></label>
+          <label>Title <input type="text" id="itemTitle" /></label>
+          <label>Description <textarea id="itemDesc" rows="2"></textarea></label>
+          <button type="submit" class="btn">Upload</button>
+          <p class="error" id="uploadError" hidden></p>
+        </form>
+      </div>
+
+      <!-- Existing items -->
+      <div class="panel">
+        <h2>Pictures</h2>
+        <div id="itemList" class="itemlist"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
