@@ -58,13 +58,22 @@ if (!fs.existsSync(USERS_FILE)) {
 // ---- App -------------------------------------------------------------------
 
 const app = express();
+const isProd = process.env.NODE_ENV === "production";
+
+// Behind Render's HTTPS proxy: trust it so secure cookies are set correctly.
+if (isProd) app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(
   session({
     secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 8 }, // 8h
+    cookie: {
+      httpOnly: true,
+      secure: isProd, // require HTTPS for the session cookie in production
+      maxAge: 1000 * 60 * 60 * 8, // 8h
+    },
   })
 );
 

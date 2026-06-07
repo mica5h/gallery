@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gallery
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Stable secret so login sessions survive restarts. Render generates a value.
+      - key: SESSION_SECRET
+        generateValue: true
