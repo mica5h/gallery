@@ -8,11 +8,16 @@ import fs from "fs";
 import crypto from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_FILE = path.join(__dirname, "data", "gallery.json");
-const USERS_FILE = path.join(__dirname, "data", "users.json");
+const DATA_DIR = path.join(__dirname, "data");
+const DATA_FILE = path.join(DATA_DIR, "gallery.json");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 
 const PORT = process.env.PORT || 3000;
+
+// Runtime dirs are gitignored, so they're absent on a fresh deploy — create them.
+fs.mkdirSync(DATA_DIR, { recursive: true });
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // ---- Storage helpers -------------------------------------------------------
 
