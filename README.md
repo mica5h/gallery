@@ -111,3 +111,4 @@ or manual dashboard setup required.
   credentials, so they're never committed.
 - Sessions are in-memory: after a server restart the admin simply logs in again.
   Gallery content, images, and the password persist (in Supabase mode).
+# cash-repo
