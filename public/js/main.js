@@ -8,6 +8,11 @@ function escapeHtml(str) {
   );
 }
 
+// Image URL: stored full URL (Supabase) or legacy local /uploads path.
+function imgSrc(item) {
+  return item.url || `/uploads/${encodeURIComponent(item.filename || "")}`;
+}
+
 async function load() {
   const res = await fetch("/api/gallery");
   const g = await res.json();
@@ -43,14 +48,15 @@ async function load() {
     for (const item of g.items) {
       const card = document.createElement("div");
       card.className = "card";
+      const src = imgSrc(item);
       card.innerHTML = `
-        <img src="/uploads/${encodeURIComponent(item.filename)}" alt="${escapeHtml(item.title)}" loading="lazy" />
+        <img src="${escapeHtml(src)}" alt="${escapeHtml(item.title)}" loading="lazy" />
         <div class="card__body">
           <p class="card__title">${escapeHtml(item.title) || "Untitled"}</p>
           ${item.description ? `<p class="card__desc">${escapeHtml(item.description)}</p>` : ""}
         </div>`;
       card.addEventListener("click", () =>
-        openLightbox(`/uploads/${encodeURIComponent(item.filename)}`, item.title, item.description)
+        openLightbox(src, item.title, item.description)
       );
       grid.appendChild(card);
     }

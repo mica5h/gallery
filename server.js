@@ -4,34 +4,12 @@ import multer from "multer";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import path from "path";
-import fs from "fs";
 import crypto from "crypto";
+import { createStorage } from "./storage.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, "data");
-const DATA_FILE = path.join(DATA_DIR, "gallery.json");
-const USERS_FILE = path.join(DATA_DIR, "users.json");
 const UPLOAD_DIR = path.join(__dirname, "uploads");
-
 const PORT = process.env.PORT || 3000;
-
-// Runtime dirs are gitignored, so they're absent on a fresh deploy — create them.
-fs.mkdirSync(DATA_DIR, { recursive: true });
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-// ---- Storage helpers -------------------------------------------------------
-
-function readJson(file, fallback) {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
-
-function writeJson(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
 
 // Seed default gallery content on first run.
 const DEFAULT_GALLERY = {
@@ -48,17 +26,19 @@ const DEFAULT_GALLERY = {
   items: [],
 };
 
-if (!fs.existsSync(DATA_FILE)) writeJson(DATA_FILE, DEFAULT_GALLERY);
+// Backend is chosen by storage.js (local files, or Supabase if its env vars are set).
+const store = await createStorage();
 
-// Seed a default admin user on first run.
-// Default credentials: admin / changeme  (CHANGE THIS — see README)
-if (!fs.existsSync(USERS_FILE)) {
-  const defaultUser = {
-    username: "admin",
-    passwordHash: bcrypt.hashSync("changeme", 10),
-  };
-  writeJson(USERS_FILE, { users: [defaultUser] });
+// Seed gallery + default admin on first run.
+if (!(await store.galleryExists())) await store.writeGallery(DEFAULT_GALLERY);
+if (!(await store.usersExists())) {
+  // Default credentials: admin / changeme  (CHANGE THIS — use the admin panel)
+  await store.writeUsers({
+    users: [{ username: "admin", passwordHash: bcrypt.hashSync("changeme", 10) }],
+  });
 }
+
+console.log(`Storage backend: ${store.mode}`);
 
 // ---- App -------------------------------------------------------------------
 
@@ -82,7 +62,8 @@ app.use(
   })
 );
 
-// Static: public site + uploaded images.
+// Static: public site + (local-mode) uploaded images. In Supabase mode images
+// are served from the public bucket URL, so /uploads is simply unused.
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
@@ -93,15 +74,19 @@ function requireAuth(req, res, next) {
   return res.status(401).json({ error: "Not authenticated" });
 }
 
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body || {};
-  const { users } = readJson(USERS_FILE, { users: [] });
-  const user = users.find((u) => u.username === username);
-  if (!user || !bcrypt.compareSync(password || "", user.passwordHash)) {
-    return res.status(401).json({ error: "Invalid username or password" });
+app.post("/api/login", async (req, res, next) => {
+  try {
+    const { username, password } = req.body || {};
+    const { users } = await store.readUsers({ users: [] });
+    const user = users.find((u) => u.username === username);
+    if (!user || !bcrypt.compareSync(password || "", user.passwordHash)) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    req.session.user = { username: user.username };
+    res.json({ username: user.username });
+  } catch (err) {
+    next(err);
   }
-  req.session.user = { username: user.username };
-  res.json({ username: user.username });
 });
 
 app.post("/api/logout", (req, res) => {
@@ -112,40 +97,60 @@ app.get("/api/me", (req, res) => {
   res.json({ user: req.session?.user || null });
 });
 
-// ---- Gallery info (public read, admin write) -------------------------------
-
-app.get("/api/gallery", (req, res) => {
-  res.json(readJson(DATA_FILE, DEFAULT_GALLERY));
+app.post("/api/change-password", requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ error: "New password must be at least 8 characters." });
+    }
+    const data = await store.readUsers({ users: [] });
+    const user = data.users.find((u) => u.username === req.session.user.username);
+    if (!user || !bcrypt.compareSync(currentPassword || "", user.passwordHash)) {
+      return res.status(400).json({ error: "Current password is incorrect." });
+    }
+    user.passwordHash = bcrypt.hashSync(newPassword, 10);
+    await store.writeUsers(data);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
 });
 
-app.put("/api/info", requireAuth, (req, res) => {
-  const gallery = readJson(DATA_FILE, DEFAULT_GALLERY);
-  const { title, intro, niceWords, contact } = req.body || {};
-  if (typeof title === "string") gallery.title = title;
-  if (typeof intro === "string") gallery.intro = intro;
-  if (typeof niceWords === "string") gallery.niceWords = niceWords;
-  if (contact && typeof contact === "object") {
-    gallery.contact = { ...gallery.contact, ...contact };
+// ---- Gallery info (public read, admin write) -------------------------------
+
+app.get("/api/gallery", async (req, res, next) => {
+  try {
+    res.json(await store.readGallery(DEFAULT_GALLERY));
+  } catch (err) {
+    next(err);
   }
-  writeJson(DATA_FILE, gallery);
-  res.json(gallery);
+});
+
+app.put("/api/info", requireAuth, async (req, res, next) => {
+  try {
+    const gallery = await store.readGallery(DEFAULT_GALLERY);
+    const { title, intro, niceWords, contact } = req.body || {};
+    if (typeof title === "string") gallery.title = title;
+    if (typeof intro === "string") gallery.intro = intro;
+    if (typeof niceWords === "string") gallery.niceWords = niceWords;
+    if (contact && typeof contact === "object") {
+      gallery.contact = { ...gallery.contact, ...contact };
+    }
+    await store.writeGallery(gallery);
+    res.json(gallery);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ---- Items: upload / edit / delete -----------------------------------------
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const name = crypto.randomBytes(12).toString("hex") + ext;
-    cb(null, name);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(), // buffer in memory; storage.js decides where it lands
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (req, file, cb) => {
     if (ALLOWED.has(file.mimetype)) cb(null, true);
@@ -153,44 +158,62 @@ const upload = multer({
   },
 });
 
-app.post("/api/items", requireAuth, (req, res) => {
-  upload.single("image")(req, res, (err) => {
-    if (err) return res.status(400).json({ error: err.message });
-    if (!req.file) return res.status(400).json({ error: "No image uploaded" });
-    const gallery = readJson(DATA_FILE, DEFAULT_GALLERY);
-    const item = {
-      id: crypto.randomBytes(8).toString("hex"),
-      filename: req.file.filename,
-      title: (req.body.title || "").trim(),
-      description: (req.body.description || "").trim(),
-      createdAt: new Date().toISOString(),
-    };
-    gallery.items.push(item);
-    writeJson(DATA_FILE, gallery);
-    res.status(201).json(item);
+app.post("/api/items", requireAuth, (req, res, next) => {
+  upload.single("image")(req, res, async (err) => {
+    try {
+      if (err) return res.status(400).json({ error: err.message });
+      if (!req.file) return res.status(400).json({ error: "No image uploaded" });
+      const { url, key } = await store.saveImage(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+      const gallery = await store.readGallery(DEFAULT_GALLERY);
+      const item = {
+        id: crypto.randomBytes(8).toString("hex"),
+        url,
+        key,
+        title: (req.body.title || "").trim(),
+        description: (req.body.description || "").trim(),
+        createdAt: new Date().toISOString(),
+      };
+      gallery.items.push(item);
+      await store.writeGallery(gallery);
+      res.status(201).json(item);
+    } catch (e) {
+      next(e);
+    }
   });
 });
 
-app.put("/api/items/:id", requireAuth, (req, res) => {
-  const gallery = readJson(DATA_FILE, DEFAULT_GALLERY);
-  const item = gallery.items.find((i) => i.id === req.params.id);
-  if (!item) return res.status(404).json({ error: "Item not found" });
-  const { title, description } = req.body || {};
-  if (typeof title === "string") item.title = title.trim();
-  if (typeof description === "string") item.description = description.trim();
-  writeJson(DATA_FILE, gallery);
-  res.json(item);
+app.put("/api/items/:id", requireAuth, async (req, res, next) => {
+  try {
+    const gallery = await store.readGallery(DEFAULT_GALLERY);
+    const item = gallery.items.find((i) => i.id === req.params.id);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    const { title, description } = req.body || {};
+    if (typeof title === "string") item.title = title.trim();
+    if (typeof description === "string") item.description = description.trim();
+    await store.writeGallery(gallery);
+    res.json(item);
+  } catch (err) {
+    next(err);
+  }
 });
 
-app.delete("/api/items/:id", requireAuth, (req, res) => {
-  const gallery = readJson(DATA_FILE, DEFAULT_GALLERY);
-  const idx = gallery.items.findIndex((i) => i.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Item not found" });
-  const [removed] = gallery.items.splice(idx, 1);
-  writeJson(DATA_FILE, gallery);
-  // Best-effort delete of the file on disk.
-  fs.unlink(path.join(UPLOAD_DIR, removed.filename), () => {});
-  res.json({ ok: true });
+app.delete("/api/items/:id", requireAuth, async (req, res, next) => {
+  try {
+    const gallery = await store.readGallery(DEFAULT_GALLERY);
+    const idx = gallery.items.findIndex((i) => i.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: "Item not found" });
+    const [removed] = gallery.items.splice(idx, 1);
+    await store.writeGallery(gallery);
+    // Best-effort delete of the stored image (key, or legacy filename).
+    await store.deleteImage(removed.key || removed.filename).catch(() => {});
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.listen(PORT, () => {

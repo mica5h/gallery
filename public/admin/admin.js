@@ -14,6 +14,11 @@ function escapeHtml(str) {
   );
 }
 
+// Image URL: stored full URL (Supabase) or legacy local /uploads path.
+function imgSrc(item) {
+  return item.url || `/uploads/${encodeURIComponent(item.filename || "")}`;
+}
+
 async function checkAuth() {
   const res = await fetch("/api/me");
   const { user } = await res.json();
@@ -86,6 +91,37 @@ $("infoForm").addEventListener("submit", async (e) => {
   }
 });
 
+// ---- Change password -------------------------------------------------------
+
+$("passwordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("passwordError").hidden = true;
+  $("passwordSaved").hidden = true;
+  const newPassword = $("newPassword").value;
+  if (newPassword !== $("confirmPassword").value) {
+    $("passwordError").textContent = "New passwords do not match.";
+    $("passwordError").hidden = false;
+    return;
+  }
+  const res = await fetch("/api/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      currentPassword: $("currentPassword").value,
+      newPassword,
+    }),
+  });
+  if (res.ok) {
+    $("passwordForm").reset();
+    $("passwordSaved").hidden = false;
+    setTimeout(() => ($("passwordSaved").hidden = true), 2500);
+  } else {
+    const { error } = await res.json().catch(() => ({}));
+    $("passwordError").textContent = error || "Could not change password.";
+    $("passwordError").hidden = false;
+  }
+});
+
 // ---- Upload ----------------------------------------------------------------
 
 $("uploadForm").addEventListener("submit", async (e) => {
@@ -121,7 +157,7 @@ function renderItems(items) {
     const row = document.createElement("div");
     row.className = "item";
     row.innerHTML = `
-      <img src="/uploads/${encodeURIComponent(item.filename)}" alt="" />
+      <img src="${escapeHtml(imgSrc(item))}" alt="" />
       <div class="item__fields">
         <input type="text" value="${escapeHtml(item.title)}" data-field="title" placeholder="Title" />
         <textarea data-field="description" rows="2" placeholder="Description">${escapeHtml(item.description)}</textarea>

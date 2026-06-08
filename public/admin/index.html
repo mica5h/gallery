@@ -52,6 +52,19 @@
         </form>
       </div>
 
+      <!-- Change password -->
+      <div class="panel">
+        <h2>Change password</h2>
+        <form id="passwordForm" class="form">
+          <label>Current password <input type="password" id="currentPassword" autocomplete="current-password" required /></label>
+          <label>New password (min 8 chars) <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required /></label>
+          <label>Confirm new password <input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" required /></label>
+          <button type="submit" class="btn">Update password</button>
+          <span class="saved" id="passwordSaved" hidden>Password updated ✓</span>
+          <p class="error" id="passwordError" hidden></p>
+        </form>
+      </div>
+
       <!-- Upload -->
       <div class="panel">
         <h2>Add a picture</h2>
