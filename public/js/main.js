@@ -174,7 +174,7 @@ function renderWorks(items) {
     const media = video
       ? `<video src="${escapeHtml(src)}"${
           item.poster ? ` poster="${escapeHtml(item.poster)}"` : ""
-        } controls playsinline preload="metadata" loop muted></video>`
+        } autoplay loop muted playsinline preload="auto"></video>`
       : `<img src="${escapeHtml(src)}" alt="${escapeHtml(title.en || title.cz)}" loading="lazy" />`;
 
     const piece = document.createElement("article");
