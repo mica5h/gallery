@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 // Seed default gallery content on first run. Text fields may be bilingual
 // objects { en, cz } or plain strings.
 const DEFAULT_GALLERY = {
-  title: "Nicol Rubart Vošmíková",
+  title: "Mgr. Nicol Rubá Vošmíková RUBART",
   intro: {
     en: "Emotion is not the subject. Emotion is the form.",
     cz: "Emoce není téma. Emoce je forma.",
@@ -24,7 +24,7 @@ const DEFAULT_GALLERY = {
     cz: "Sochařské nástěnné objekty a objektové instalace — neopakovatelné morfologie vzniklé pod tlakem psychologické nutnosti.",
   },
   contact: {
-    name: "Mgr. Nicol Rubáš Vošmíková Rubart",
+    name: "Mgr. Nicol Rubá Vošmíková RUBART",
     email: "nicol@rubart.vip",
     note: { en: "", cz: "" },
   },

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nicol Rubart Vošmíková — Sculptor &amp; Installation Artist</title>
-  <meta name="description" content="Mgr. Nicol Rubáš Vošmíková Rubart — contemporary sculptor and installation artist. Petrified emotion, optical deniability of gravity, museum-like spatial presence." />
+  <title>Mgr. Nicol Rubá Vošmíková RUBART — Sculptor &amp; Installation Artist</title>
+  <meta name="description" content="Mgr. Nicol Rubá Vošmíková RUBART — contemporary sculptor and installation artist. Petrified emotion, optical deniability of gravity, museum-like spatial presence." />
   <link rel="icon" type="image/png" href="/assets/logo-rv.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,47 +15,54 @@
   <header class="site-header" id="top">
     <div class="site-header__inner">
       <a href="#top" class="brand" aria-label="Home">
-        <img src="/assets/logo-rv.png" alt="" class="brand__mark" />
-        <span class="brand__name">Nicol Rubart Vošmíková</span>
+        <span class="brand__name">Mgr. Nicol Rubá Vošmíková RUBART</span>
+        <span class="brand__role">Sculptor &amp; Installation</span>
       </a>
 
-      <div class="header-controls">
-        <div class="lang" role="group" aria-label="Language">
-          <button class="lang__btn is-active" data-lang="en" type="button">EN</button>
-          <span class="lang__sep" aria-hidden="true">/</span>
-          <button class="lang__btn" data-lang="cz" type="button">CZ</button>
-        </div>
-        <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="menuPanel">
-          <span class="en">Menu</span><span class="cz">Menu</span>
-          <span class="menu-toggle__sign" aria-hidden="true">+</span>
-        </button>
-      </div>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="menuPanel">
+        Menu
+        <span class="menu-toggle__sign" aria-hidden="true">+</span>
+      </button>
     </div>
 
-    <!-- Expandable menu — opens / closes on click, no moving element -->
+    <!-- Dropdown menu — opens directly below the Menu button; each item reveals only a QR -->
     <nav class="menu-panel" id="menuPanel" hidden aria-label="Primary">
-      <div class="menu-panel__inner">
-        <ul class="menu-links">
-          <li><a href="#work"><span class="en">Work</span><span class="cz">Tvorba</span></a></li>
-          <li><a href="#practice"><span class="en">Practice</span><span class="cz">Praxe</span></a></li>
-          <li><a href="#recognition"><span class="en">Recognition</span><span class="cz">Ocenění</span></a></li>
-          <li><a href="#contact"><span class="en">Contact</span><span class="cz">Kontakt</span></a></li>
-          <li><a id="driveLinkMenu" href="#" target="_blank" rel="noopener" hidden>
-            <span class="en">Full Archive ↗</span><span class="cz">Celý archiv ↗</span>
-          </a></li>
-        </ul>
-
-        <aside class="menu-drive" id="menuDrive" hidden>
-          <div class="menu-drive__qr" id="driveQr" aria-hidden="true"></div>
-          <p class="menu-drive__cap">
-            <span class="en">Scan for the full archive</span>
-            <span class="cz">Naskenujte pro celý archiv</span>
-          </p>
-          <a class="menu-drive__link" id="driveLink" href="#" target="_blank" rel="noopener">
-            <span class="en">Open Google Drive ↗</span><span class="cz">Otevřít Google Disk ↗</span>
-          </a>
-        </aside>
-      </div>
+      <ul class="menu-list">
+        <li class="menu-item">
+          <button type="button" class="menu-item__btn" aria-expanded="false">Artworks</button>
+          <div class="menu-item__panel" hidden>
+            <div class="menu-qr" data-link="artworks" aria-hidden="true"></div>
+          </div>
+        </li>
+        <li class="menu-item">
+          <button type="button" class="menu-item__btn" aria-expanded="false">Exhibitions</button>
+          <div class="menu-item__panel" hidden>
+            <div class="menu-qr" data-link="exhibitions" aria-hidden="true"></div>
+          </div>
+        </li>
+        <li class="menu-item">
+          <button type="button" class="menu-item__btn" aria-expanded="false">Publications</button>
+          <div class="menu-item__panel" hidden>
+            <div class="menu-qr" data-link="publications" aria-hidden="true"></div>
+          </div>
+        </li>
+        <li class="menu-item">
+          <button type="button" class="menu-item__btn" aria-expanded="false">Technique / Blockchain</button>
+          <div class="menu-item__panel" hidden>
+            <div class="menu-qr" data-link="technique" aria-hidden="true"></div>
+          </div>
+        </li>
+        <li class="menu-item">
+          <button type="button" class="menu-item__btn" aria-expanded="false">Contact</button>
+          <div class="menu-item__panel" hidden>
+            <address class="menu-contact">
+              <a href="mailto:nicol@rubart.vip">nicol@rubart.vip</a>
+              <a href="tel:+420775525545">00420 775 525 545</a>
+              <a href="https://www.instagram.com/nicol.rubart" target="_blank" rel="noopener">@nicol.rubart</a>
+            </address>
+          </div>
+        </li>
+      </ul>
     </nav>
   </header>
 
@@ -66,7 +73,7 @@
         <span class="en">Contemporary Sculptor &amp; Installation Artist</span>
         <span class="cz">Současná sochařka a autorka objektových instalací</span>
       </p>
-      <h1 class="intro__title">Mgr. Nicol Rubáš<br />Vošmíková Rubart</h1>
+      <h1 class="intro__title">Mgr. Nicol Rubá<br />Vošmíková RUBART</h1>
       <p class="intro__lead">
         <span class="en"><em>Emotion is not the subject. Emotion is the form.</em></span>
         <span class="cz"><em>Emoce není téma. Emoce je forma.</em></span>
@@ -88,18 +95,18 @@
     <!-- Practice / about -->
     <section id="practice" class="practice">
       <figure class="practice__mark">
-        <img src="/assets/logo-nr.png" alt="Mgr. Nicol Rubáš Vošmíková Rubart — Sculptor | Installation" />
+        <img src="/assets/logo-nr.png" alt="Mgr. Nicol Rubá Vošmíková RUBART — Sculptor | Installation" />
       </figure>
 
       <div class="practice__text">
         <p class="section-label"><span class="en">Practice</span><span class="cz">Praxe</span></p>
 
         <div class="en">
-          <p>Mgr. Nicol Rubáš Vošmíková Rubart creates sculptural wall works and object installations across multiple scales, unified by a consistent material language, ritual-based process, and the paradox of visual mass versus extreme lightness.</p>
+          <p>Mgr. Nicol Rubá Vošmíková RUBART creates sculptural wall works and object installations across multiple scales, unified by a consistent material language, ritual-based process, and the paradox of visual mass versus extreme lightness.</p>
           <p>Each work operates as a non-reproducible morphology produced under psychological necessity — emotion functions as the ontological basis of form, not its interpretation. Works are monumental in appearance, exceptionally light in mass, and designed for single-point suspension. Light activation shifts each work onto another perceptual plane, revealing latent layers embedded within the morphology itself.</p>
         </div>
         <div class="cz">
-          <p>Mgr. Nicol Rubáš Vošmíková Rubart je česká sochařka a autorka objektových instalací, průkopnice certifikované techniky Saphea Phenomenal Spatial™. Její tvorba stojí na ontologickém základu emoce jako primárního determinantu formy — nikoliv jako tématu, ale jako formotvorné síly.</p>
+          <p>Mgr. Nicol Rubá Vošmíková RUBART je česká sochařka a autorka objektových instalací, průkopnice certifikované techniky Saphea Phenomenal Spatial™. Její tvorba stojí na ontologickém základu emoce jako primárního determinantu formy — nikoliv jako tématu, ale jako formotvorné síly.</p>
           <p>Proces je řízen absolutní korelací mezi vnitřním psychickým stavem a fyzickou manipulací s hmotou. Každé dílo je neopakovatelná morfologie vzniklá pod tlakem psychologické nutnosti. Díla jsou monumentální v pohledové hmotnosti a výjimečně lehká fyzicky — od 0,3 kg, instalovatelná na jeden hřebík.</p>
         </div>
       </div>
@@ -185,7 +192,7 @@
   <!-- Contact -->
   <footer id="contact" class="contact">
     <p class="section-label"><span class="en">Contact</span><span class="cz">Kontakt</span></p>
-    <p class="contact__name">Mgr. Nicol Rubáš Vošmíková Rubart</p>
+    <p class="contact__name">Mgr. Nicol Rubá Vošmíková RUBART</p>
     <p class="contact__details">
       <a href="mailto:nicol@rubart.vip">nicol@rubart.vip</a>
       <span class="contact__sep">·</span>
@@ -199,7 +206,7 @@
       <span>Arte Laguna</span>
     </p>
     <p class="contact__copy">
-      &copy; <span id="year"></span> Mgr. Nicol Rubáš Vošmíková Rubart ·
+      &copy; <span id="year"></span> Mgr. Nicol Rubá Vošmíková RUBART ·
       <span class="en">Saphea Phenomenal Spatial™ · all works blockchain-certified</span>
       <span class="cz">Saphea Phenomenal Spatial™ · všechna díla blockchainově certifikována</span>
       · <a href="/admin" class="contact__admin">Admin</a>

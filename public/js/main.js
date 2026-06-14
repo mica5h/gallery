@@ -1,4 +1,4 @@
-// Public artist page — language toggle, expandable menu, work rendering, lightbox.
+// Public artist page — expandable menu, work rendering, lightbox.
 
 const $ = (id) => document.getElementById(id);
 
@@ -17,33 +17,17 @@ function pair(val) {
   return { en: s, cz: s };
 }
 
-// Image URL: stored full URL (Supabase) or legacy local /uploads path.
+// Media URL: stored full URL (Supabase) or legacy local /uploads path.
 function imgSrc(item) {
   return item.url || `/uploads/${encodeURIComponent(item.filename || "")}`;
 }
 
-// ---- Language --------------------------------------------------------------
-
-function setLang(lang) {
-  const l = lang === "cz" ? "cz" : "en";
-  document.body.classList.toggle("lang-en", l === "en");
-  document.body.classList.toggle("lang-cz", l === "cz");
-  document.documentElement.lang = l === "cz" ? "cs" : "en";
-  document.querySelectorAll(".lang__btn").forEach((b) =>
-    b.classList.toggle("is-active", b.dataset.lang === l)
+// A work is a video if explicitly typed or its URL has a known video extension.
+function isVideo(item) {
+  return (
+    item.type === "video" || /\.(mp4|webm|mov|m4v)$/i.test(item.url || "")
   );
-  try { localStorage.setItem("nr-lang", l); } catch {}
 }
-
-document.querySelectorAll(".lang__btn").forEach((b) =>
-  b.addEventListener("click", () => setLang(b.dataset.lang))
-);
-
-(function initLang() {
-  let saved = null;
-  try { saved = localStorage.getItem("nr-lang"); } catch {}
-  setLang(saved || "en");
-})();
 
 // ---- Expandable menu -------------------------------------------------------
 
@@ -62,6 +46,23 @@ menuPanel.addEventListener("click", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") setMenu(false);
+});
+
+// Accordion — each item reveals only its own QR / contact, one open at a time.
+const menuItemBtns = document.querySelectorAll(".menu-item__btn");
+menuItemBtns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const open = btn.getAttribute("aria-expanded") === "true";
+    menuItemBtns.forEach((b) => {
+      b.setAttribute("aria-expanded", "false");
+      const p = b.nextElementSibling;
+      if (p) p.hidden = true;
+    });
+    if (!open) {
+      btn.setAttribute("aria-expanded", "true");
+      if (btn.nextElementSibling) btn.nextElementSibling.hidden = false;
+    }
+  });
 });
 
 // ---- Scroll reveal ---------------------------------------------------------
@@ -119,34 +120,37 @@ function setupStaticReveals() {
 
 // ---- Load content ----------------------------------------------------------
 
-// Placeholder Drive link — replace via the admin panel ("Google Drive link").
+// Placeholder Drive link — used until a real link is configured.
 const DRIVE_PLACEHOLDER = "https://drive.google.com/drive/folders/PLACEHOLDER";
+
+// Per-category QR targets. Set the real URLs here; empty values fall back to the
+// configured Google Drive link (admin "Google Drive link").
+const MENU_LINKS = {
+  artworks: "",
+  exhibitions: "",
+  publications: "",
+  technique: "",
+};
 
 async function load() {
   const g = await (await fetch("/api/gallery")).json();
   renderWorks(g.items || []);
-  renderDrive(g.driveUrl);
+  renderMenuQrs(g.driveUrl);
 }
 
-function renderDrive(url) {
-  const link = url || DRIVE_PLACEHOLDER;
-  const block = $("menuDrive");
-  const menuLink = $("driveLinkMenu");
-
-  $("driveLink").href = link;
-  menuLink.href = link;
-  menuLink.hidden = false;
-  block.hidden = false;
-
-  const target = $("driveQr");
-  try {
-    const qr = qrcode(0, "M");
-    qr.addData(link);
-    qr.make();
-    target.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0 });
-  } catch {
-    target.textContent = "QR";
-  }
+function renderMenuQrs(driveUrl) {
+  const fallback = driveUrl || DRIVE_PLACEHOLDER;
+  document.querySelectorAll(".menu-qr").forEach((el) => {
+    const link = MENU_LINKS[el.dataset.link] || fallback;
+    try {
+      const qr = qrcode(0, "M");
+      qr.addData(link);
+      qr.make();
+      el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0 });
+    } catch {
+      el.textContent = "QR";
+    }
+  });
 }
 
 function renderWorks(items) {
@@ -162,15 +166,22 @@ function renderWorks(items) {
 
   items.forEach((item, i) => {
     const src = imgSrc(item);
+    const video = isVideo(item);
     const title = pair(item.title);
     const desc = pair(item.description);
     const idx = String(i + 1).padStart(2, "0");
 
+    const media = video
+      ? `<video src="${escapeHtml(src)}"${
+          item.poster ? ` poster="${escapeHtml(item.poster)}"` : ""
+        } controls playsinline preload="metadata" loop muted></video>`
+      : `<img src="${escapeHtml(src)}" alt="${escapeHtml(title.en || title.cz)}" loading="lazy" />`;
+
     const piece = document.createElement("article");
     piece.className = "work-piece";
     piece.innerHTML = `
-      <figure class="work-piece__media">
-        <img src="${escapeHtml(src)}" alt="${escapeHtml(title.en || title.cz)}" loading="lazy" />
+      <figure class="work-piece__media${video ? " work-piece__media--video" : ""}">
+        ${media}
       </figure>
       <div class="work-piece__caption">
         <p class="work-piece__index">${idx}</p>
@@ -184,10 +195,13 @@ function renderWorks(items) {
         }
       </div>`;
 
-    piece.querySelector(".work-piece__media").addEventListener("click", () => {
-      const lang = document.body.classList.contains("lang-cz") ? "cz" : "en";
-      openLightbox(src, title[lang], desc[lang]);
-    });
+    // Images open in the lightbox on click; videos play inline with their own controls.
+    if (!video) {
+      piece.querySelector(".work-piece__media").addEventListener("click", () => {
+        const lang = document.body.classList.contains("lang-cz") ? "cz" : "en";
+        openLightbox(src, title[lang], desc[lang]);
+      });
+    }
     wrap.appendChild(piece);
     reveal(piece);
   });
