@@ -14,6 +14,13 @@ function escapeHtml(str) {
   );
 }
 
+// Bilingual value: { en, cz } object or a plain string (used for both languages).
+function pair(val) {
+  if (val && typeof val === "object") return { en: val.en || "", cz: val.cz || "" };
+  const s = String(val ?? "");
+  return { en: s, cz: s };
+}
+
 // Image URL: stored full URL (Supabase) or legacy local /uploads path.
 function imgSrc(item) {
   return item.url || `/uploads/${encodeURIComponent(item.filename || "")}`;
@@ -59,12 +66,17 @@ $("logoutBtn").addEventListener("click", async () => {
 
 async function loadGallery() {
   const g = await (await fetch("/api/gallery")).json();
+  const intro = pair(g.intro), words = pair(g.niceWords), note = pair(g.contact?.note);
   $("infoTitle").value = g.title || "";
-  $("infoIntro").value = g.intro || "";
-  $("infoWords").value = g.niceWords || "";
+  $("infoIntroEn").value = intro.en;
+  $("infoIntroCz").value = intro.cz;
+  $("infoWordsEn").value = words.en;
+  $("infoWordsCz").value = words.cz;
+  $("infoDrive").value = g.driveUrl || "";
   $("contactName").value = g.contact?.name || "";
   $("contactEmail").value = g.contact?.email || "";
-  $("contactNote").value = g.contact?.note || "";
+  $("contactNoteEn").value = note.en;
+  $("contactNoteCz").value = note.cz;
   renderItems(g.items || []);
 }
 
@@ -72,12 +84,13 @@ $("infoForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const body = {
     title: $("infoTitle").value,
-    intro: $("infoIntro").value,
-    niceWords: $("infoWords").value,
+    intro: { en: $("infoIntroEn").value, cz: $("infoIntroCz").value },
+    niceWords: { en: $("infoWordsEn").value, cz: $("infoWordsCz").value },
+    driveUrl: $("infoDrive").value,
     contact: {
       name: $("contactName").value,
       email: $("contactEmail").value,
-      note: $("contactNote").value,
+      note: { en: $("contactNoteEn").value, cz: $("contactNoteCz").value },
     },
   };
   const res = await fetch("/api/info", {
@@ -131,8 +144,10 @@ $("uploadForm").addEventListener("submit", async (e) => {
   if (!file) return;
   const fd = new FormData();
   fd.append("image", file);
-  fd.append("title", $("itemTitle").value);
-  fd.append("description", $("itemDesc").value);
+  fd.append("titleEn", $("itemTitleEn").value);
+  fd.append("titleCz", $("itemTitleCz").value);
+  fd.append("descEn", $("itemDescEn").value);
+  fd.append("descCz", $("itemDescCz").value);
   const res = await fetch("/api/items", { method: "POST", body: fd });
   if (res.ok) {
     $("uploadForm").reset();
@@ -154,13 +169,16 @@ function renderItems(items) {
     return;
   }
   for (const item of items) {
+    const t = pair(item.title), d = pair(item.description);
     const row = document.createElement("div");
     row.className = "item";
     row.innerHTML = `
       <img src="${escapeHtml(imgSrc(item))}" alt="" />
       <div class="item__fields">
-        <input type="text" value="${escapeHtml(item.title)}" data-field="title" placeholder="Title" />
-        <textarea data-field="description" rows="2" placeholder="Description">${escapeHtml(item.description)}</textarea>
+        <input type="text" value="${escapeHtml(t.en)}" data-field="titleEn" placeholder="Title — EN" />
+        <input type="text" value="${escapeHtml(t.cz)}" data-field="titleCz" placeholder="Title — CZ" />
+        <textarea data-field="descEn" rows="2" placeholder="Description — EN">${escapeHtml(d.en)}</textarea>
+        <textarea data-field="descCz" rows="2" placeholder="Description — CZ">${escapeHtml(d.cz)}</textarea>
       </div>
       <div class="item__actions">
         <button class="btn-sm" data-action="save">Save</button>
@@ -168,12 +186,20 @@ function renderItems(items) {
       </div>`;
 
     row.querySelector('[data-action="save"]').addEventListener("click", async () => {
-      const title = row.querySelector('[data-field="title"]').value;
-      const description = row.querySelector('[data-field="description"]').value;
+      const body = {
+        title: {
+          en: row.querySelector('[data-field="titleEn"]').value,
+          cz: row.querySelector('[data-field="titleCz"]').value,
+        },
+        description: {
+          en: row.querySelector('[data-field="descEn"]').value,
+          cz: row.querySelector('[data-field="descCz"]').value,
+        },
+      };
       await fetch(`/api/items/${item.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify(body),
       });
       await loadGallery();
     });

@@ -3,52 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gallery</title>
-  <meta name="description" content="A photo gallery." />
+  <title>Nicol Rubart Vošmíková — Sculptor &amp; Installation Artist</title>
+  <meta name="description" content="Mgr. Nicol Rubáš Vošmíková Rubart — contemporary sculptor and installation artist. Petrified emotion, optical deniability of gravity, museum-like spatial presence." />
+  <link rel="icon" type="image/png" href="/assets/logo-rv.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
-<body>
-  <header class="site-header">
-    <nav class="nav">
-      <a href="#top" class="nav__brand" id="navBrand">Gallery</a>
-      <ul class="nav__links">
-        <li><a href="#gallery">Gallery</a></li>
-        <li><a href="#words">Words</a></li>
-        <li><a href="#contact">Contact</a></li>
-        <li><a href="/admin" class="nav__admin">Admin</a></li>
-      </ul>
+<body class="lang-en">
+  <header class="site-header" id="top">
+    <div class="site-header__inner">
+      <a href="#top" class="brand" aria-label="Home">
+        <img src="/assets/logo-rv.png" alt="" class="brand__mark" />
+        <span class="brand__name">Nicol Rubart Vošmíková</span>
+      </a>
+
+      <div class="header-controls">
+        <div class="lang" role="group" aria-label="Language">
+          <button class="lang__btn is-active" data-lang="en" type="button">EN</button>
+          <span class="lang__sep" aria-hidden="true">/</span>
+          <button class="lang__btn" data-lang="cz" type="button">CZ</button>
+        </div>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="menuPanel">
+          <span class="en">Menu</span><span class="cz">Menu</span>
+          <span class="menu-toggle__sign" aria-hidden="true">+</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Expandable menu — opens / closes on click, no moving element -->
+    <nav class="menu-panel" id="menuPanel" hidden aria-label="Primary">
+      <div class="menu-panel__inner">
+        <ul class="menu-links">
+          <li><a href="#work"><span class="en">Work</span><span class="cz">Tvorba</span></a></li>
+          <li><a href="#practice"><span class="en">Practice</span><span class="cz">Praxe</span></a></li>
+          <li><a href="#recognition"><span class="en">Recognition</span><span class="cz">Ocenění</span></a></li>
+          <li><a href="#contact"><span class="en">Contact</span><span class="cz">Kontakt</span></a></li>
+          <li><a id="driveLinkMenu" href="#" target="_blank" rel="noopener" hidden>
+            <span class="en">Full Archive ↗</span><span class="cz">Celý archiv ↗</span>
+          </a></li>
+        </ul>
+
+        <aside class="menu-drive" id="menuDrive" hidden>
+          <div class="menu-drive__qr" id="driveQr" aria-hidden="true"></div>
+          <p class="menu-drive__cap">
+            <span class="en">Scan for the full archive</span>
+            <span class="cz">Naskenujte pro celý archiv</span>
+          </p>
+          <a class="menu-drive__link" id="driveLink" href="#" target="_blank" rel="noopener">
+            <span class="en">Open Google Drive ↗</span><span class="cz">Otevřít Google Disk ↗</span>
+          </a>
+        </aside>
+      </div>
     </nav>
   </header>
 
-  <main id="top">
-    <!-- Section 1: gallery info / hero -->
-    <section id="info" class="hero">
-      <h1 id="galleryTitle">Gallery</h1>
-      <p class="hero__intro" id="galleryIntro"></p>
-      <a href="#gallery" class="btn">View the gallery ↓</a>
+  <main>
+    <!-- Intro / hero -->
+    <section class="intro">
+      <p class="intro__eyebrow">
+        <span class="en">Contemporary Sculptor &amp; Installation Artist</span>
+        <span class="cz">Současná sochařka a autorka objektových instalací</span>
+      </p>
+      <h1 class="intro__title">Mgr. Nicol Rubáš<br />Vošmíková Rubart</h1>
+      <p class="intro__lead">
+        <span class="en"><em>Emotion is not the subject. Emotion is the form.</em></span>
+        <span class="cz"><em>Emoce není téma. Emoce je forma.</em></span>
+      </p>
     </section>
 
-    <!-- Section 2: items -->
-    <section id="gallery" class="section">
-      <h2>Pictures</h2>
-      <div class="grid" id="grid">
-        <p class="muted" id="emptyState" hidden>No pictures yet — add some from the admin panel.</p>
+    <!-- Featured work: large image + text, alternating. Ends after the 2nd piece. -->
+    <section id="work" class="work">
+      <p class="section-label">
+        <span class="en">Selected Work</span><span class="cz">Vybraná tvorba</span>
+      </p>
+      <div class="works" id="works">
+        <p class="muted empty" id="emptyState" hidden>
+          <span class="en">No works to show yet.</span><span class="cz">Zatím nejsou žádná díla.</span>
+        </p>
       </div>
     </section>
 
-    <!-- Section 3: nice words -->
-    <section id="words" class="section words">
-      <h2>A few words</h2>
-      <p id="niceWords" class="words__text"></p>
+    <!-- Practice / about -->
+    <section id="practice" class="practice">
+      <figure class="practice__mark">
+        <img src="/assets/logo-nr.png" alt="Mgr. Nicol Rubáš Vošmíková Rubart — Sculptor | Installation" />
+      </figure>
+
+      <div class="practice__text">
+        <p class="section-label"><span class="en">Practice</span><span class="cz">Praxe</span></p>
+
+        <div class="en">
+          <p>Mgr. Nicol Rubáš Vošmíková Rubart creates sculptural wall works and object installations across multiple scales, unified by a consistent material language, ritual-based process, and the paradox of visual mass versus extreme lightness.</p>
+          <p>Each work operates as a non-reproducible morphology produced under psychological necessity — emotion functions as the ontological basis of form, not its interpretation. Works are monumental in appearance, exceptionally light in mass, and designed for single-point suspension. Light activation shifts each work onto another perceptual plane, revealing latent layers embedded within the morphology itself.</p>
+        </div>
+        <div class="cz">
+          <p>Mgr. Nicol Rubáš Vošmíková Rubart je česká sochařka a autorka objektových instalací, průkopnice certifikované techniky Saphea Phenomenal Spatial™. Její tvorba stojí na ontologickém základu emoce jako primárního determinantu formy — nikoliv jako tématu, ale jako formotvorné síly.</p>
+          <p>Proces je řízen absolutní korelací mezi vnitřním psychickým stavem a fyzickou manipulací s hmotou. Každé dílo je neopakovatelná morfologie vzniklá pod tlakem psychologické nutnosti. Díla jsou monumentální v pohledové hmotnosti a výjimečně lehká fyzicky — od 0,3 kg, instalovatelná na jeden hřebík.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Three conceptual pillars -->
+    <section class="pillars">
+      <article class="pillar">
+        <h3><span class="en">Petrified Emotion</span><span class="cz">Zkamenělá emoce</span></h3>
+        <p>
+          <span class="en">The transformation of transient psychological states into permanent physical matter. Each work is a material record of an irreversible emotional condition, fixed through repetitive ritual action.</span>
+          <span class="cz">Proměna prchavých psychických stavů v trvalou fyzickou hmotu. Každé dílo je hmotným záznamem nevratného emočního stavu, ustáleného opakovaným rituálním úkonem.</span>
+        </p>
+      </article>
+      <article class="pillar">
+        <h3><span class="en">Optical Deniability of Gravity</span><span class="cz">Optické popření gravitace</span></h3>
+        <p>
+          <span class="en">Monumental in appearance, weighing as little as 0.3 kg. Works appear as geological strata and fossilized matter — and install on a single nail. Every expectation of physical weight is denied.</span>
+          <span class="cz">Monumentální vzhled při hmotnosti pouhých 0,3 kg. Povrchy čtou jako geologické vrstvy a zkameněliny — a dílo se zavěsí na jediný hřebík. Každé očekávání váhy je popřeno.</span>
+        </p>
+      </article>
+      <article class="pillar">
+        <h3><span class="en">Pre-Verbal Spatial Experience</span><span class="cz">Předverbální prostorový zážitek</span></h3>
+        <p>
+          <span class="en">Installations bypass conscious identification, operating through perceptual dissonance and somatic consonance — the environment is accepted before it is named. Works alter acoustics, light, and bodily orientation.</span>
+          <span class="cz">Instalace obcházejí vědomou identifikaci a působí skrze percepční disonanci a somatickou souznělost — prostředí je přijato dříve, než je pojmenováno. Díla mění akustiku, světlo i orientaci těla.</span>
+        </p>
+      </article>
+    </section>
+
+    <!-- Recognition -->
+    <section id="recognition" class="recognition">
+      <p class="section-label"><span class="en">International Recognition</span><span class="cz">Mezinárodní ocenění</span></p>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat__num">20+</span>
+          <span class="stat__label"><span class="en">ISSN/ISBN publications in 5 months</span><span class="cz">publikací ISSN/ISBN za 5 měsíců</span></span>
+        </div>
+        <div class="stat">
+          <span class="stat__num">33+</span>
+          <span class="stat__label"><span class="en">curated, jury-selected exhibitions</span><span class="cz">kurátorsky vybraných výstav</span></span>
+        </div>
+        <div class="stat">
+          <span class="stat__num">Top 40</span>
+          <span class="stat__label"><span class="en">Premio Artista d'Europa, Venice — of 1,100+</span><span class="cz">Premio Artista d'Europa, Benátky — z 1 100+</span></span>
+        </div>
+        <div class="stat">
+          <span class="stat__num">3×</span>
+          <span class="stat__label"><span class="en">blockchain-certified technique per work</span><span class="cz">blockchainová certifikace techniky na dílo</span></span>
+        </div>
+      </div>
+
+      <div class="recognition__cols">
+        <div class="rec-col">
+          <h3><span class="en">Selected Exhibitions</span><span class="cz">Vybrané výstavy</span></h3>
+          <ul class="rec-list">
+            <li><span class="rec-year">2026</span> MAXXI — Museo Nazionale delle Arti del XXI Secolo, Roma · <em>Progetto d'Autore 2026</em></li>
+            <li><span class="rec-year">2026</span> Premio Brera '26, Milano · <span class="en">personal critique by Roberto Litta (RAI / RaiNews24)</span><span class="cz">osobní kritika Roberto Litta (RAI / RaiNews24)</span></li>
+            <li><span class="rec-year">2026</span> Curatone.Art Berlin — <span class="en">Double Finalist</span><span class="cz">dvojnásobná finalistka</span></li>
+            <li><span class="rec-year">2026</span> London Contemporary Art Fair</li>
+            <li><span class="rec-year">2026</span> Gallerium Canada — <em>Romantica</em> · <span class="en">Award of Excellence (3rd)</span><span class="cz">Award of Excellence (3. místo)</span></li>
+            <li><span class="rec-year">2025</span> Original Gallery Prague — Palác Adria</li>
+          </ul>
+        </div>
+        <div class="rec-col">
+          <h3><span class="en">Press &amp; Media</span><span class="cz">Tisk a média</span></h3>
+          <ul class="rec-list">
+            <li>RAI / RaiNews24 · <span class="en">personal critique, Premio Brera '26</span><span class="cz">osobní kritika, Premio Brera '26</span></li>
+            <li>Artistonish Contemporary Art Magazine · <span class="en">int. feature, No. 66</span><span class="cz">mezinár. profil, č. 66</span></li>
+            <li>Moravskoslezský deník · <span class="en">full-page feature</span><span class="cz">celostránkový článek</span></li>
+            <li>Pitturiamo Italia · <span class="en">int. art feature</span><span class="cz">mezinárodní profil</span></li>
+          </ul>
+          <p class="rec-note">
+            <span class="en">Saphea Phenomenal Spatial™ — proprietary technique, irreversibly registered on Ethereum Mainnet &amp; Bitcoin OriginStamp, notarially verified. Certified professional artist, Ministry of Culture CR (Jan 2026).</span>
+            <span class="cz">Saphea Phenomenal Spatial™ — vlastní technika, nevratně registrovaná na Ethereum Mainnet a Bitcoin OriginStamp, notářsky ověřená. Certifikovaná profesionální umělkyně, Ministerstvo kultury ČR (leden 2026).</span>
+          </p>
+        </div>
+      </div>
     </section>
   </main>
 
-  <!-- Footer: contact -->
-  <footer id="contact" class="site-footer">
-    <h2>Contact</h2>
-    <p id="contactNote" class="footer__note"></p>
-    <p id="contactDetails" class="footer__details"></p>
-    <p class="footer__copy">&copy; <span id="year"></span> <span id="footerName"></span></p>
+  <!-- Contact -->
+  <footer id="contact" class="contact">
+    <p class="section-label"><span class="en">Contact</span><span class="cz">Kontakt</span></p>
+    <p class="contact__name">Mgr. Nicol Rubáš Vošmíková Rubart</p>
+    <p class="contact__details">
+      <a href="mailto:nicol@rubart.vip">nicol@rubart.vip</a>
+      <span class="contact__sep">·</span>
+      <a href="tel:+420775525545">+420 775 525 545</a>
+    </p>
+    <p class="contact__links">
+      <a href="https://www.instagram.com/nicol.rubart" target="_blank" rel="noopener">Instagram</a>
+      <span class="contact__sep">·</span>
+      <span>Saatchi Art</span>
+      <span class="contact__sep">·</span>
+      <span>Arte Laguna</span>
+    </p>
+    <p class="contact__copy">
+      &copy; <span id="year"></span> Mgr. Nicol Rubáš Vošmíková Rubart ·
+      <span class="en">Saphea Phenomenal Spatial™ · all works blockchain-certified</span>
+      <span class="cz">Saphea Phenomenal Spatial™ · všechna díla blockchainově certifikována</span>
+      · <a href="/admin" class="contact__admin">Admin</a>
+    </p>
   </footer>
 
   <!-- Lightbox -->
@@ -58,6 +213,7 @@
     <p id="lightboxCaption" class="lightbox__caption"></p>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script src="/js/main.js"></script>
 </body>
 </html>

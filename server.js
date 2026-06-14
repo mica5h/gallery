@@ -11,20 +11,31 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const PORT = process.env.PORT || 3000;
 
-// Seed default gallery content on first run.
+// Seed default gallery content on first run. Text fields may be bilingual
+// objects { en, cz } or plain strings.
 const DEFAULT_GALLERY = {
-  title: "My Gallery",
-  intro:
-    "A small collection of pictures I love. Scroll down to explore the gallery, and find a few words and contact details at the end.",
-  niceWords:
-    "Thanks for stopping by. Every picture here is a moment worth keeping — I hope one of them stays with you too.",
-  contact: {
-    name: "mica5h",
-    email: "",
-    note: "Have a question or just want to say hi? Reach out anytime.",
+  title: "Nicol Rubart Vošmíková",
+  intro: {
+    en: "Emotion is not the subject. Emotion is the form.",
+    cz: "Emoce není téma. Emoce je forma.",
   },
+  niceWords: {
+    en: "Sculptural wall works and object installations — non-reproducible morphologies produced under psychological necessity.",
+    cz: "Sochařské nástěnné objekty a objektové instalace — neopakovatelné morfologie vzniklé pod tlakem psychologické nutnosti.",
+  },
+  contact: {
+    name: "Mgr. Nicol Rubáš Vošmíková Rubart",
+    email: "nicol@rubart.vip",
+    note: { en: "", cz: "" },
+  },
+  // Public Google Drive folder shown as a QR code in the menu (placeholder until set).
+  driveUrl: "",
   items: [],
 };
+
+// A text field is acceptable if it's a string or a plain { en, cz }-style object.
+const isText = (v) =>
+  typeof v === "string" || (v && typeof v === "object" && !Array.isArray(v));
 
 // Backend is chosen by storage.js (local files, or Supabase if its env vars are set).
 const store = await createStorage();
@@ -131,10 +142,11 @@ app.get("/api/gallery", async (req, res, next) => {
 app.put("/api/info", requireAuth, async (req, res, next) => {
   try {
     const gallery = await store.readGallery(DEFAULT_GALLERY);
-    const { title, intro, niceWords, contact } = req.body || {};
+    const { title, intro, niceWords, contact, driveUrl } = req.body || {};
     if (typeof title === "string") gallery.title = title;
-    if (typeof intro === "string") gallery.intro = intro;
-    if (typeof niceWords === "string") gallery.niceWords = niceWords;
+    if (isText(intro)) gallery.intro = intro;
+    if (isText(niceWords)) gallery.niceWords = niceWords;
+    if (typeof driveUrl === "string") gallery.driveUrl = driveUrl.trim();
     if (contact && typeof contact === "object") {
       gallery.contact = { ...gallery.contact, ...contact };
     }
@@ -169,12 +181,19 @@ app.post("/api/items", requireAuth, (req, res, next) => {
         req.file.mimetype
       );
       const gallery = await store.readGallery(DEFAULT_GALLERY);
+      const b = req.body || {};
       const item = {
         id: crypto.randomBytes(8).toString("hex"),
         url,
         key,
-        title: (req.body.title || "").trim(),
-        description: (req.body.description || "").trim(),
+        title: {
+          en: (b.titleEn ?? b.title ?? "").trim(),
+          cz: (b.titleCz ?? b.title ?? "").trim(),
+        },
+        description: {
+          en: (b.descEn ?? b.description ?? "").trim(),
+          cz: (b.descCz ?? b.description ?? "").trim(),
+        },
         createdAt: new Date().toISOString(),
       };
       gallery.items.push(item);
@@ -192,8 +211,8 @@ app.put("/api/items/:id", requireAuth, async (req, res, next) => {
     const item = gallery.items.find((i) => i.id === req.params.id);
     if (!item) return res.status(404).json({ error: "Item not found" });
     const { title, description } = req.body || {};
-    if (typeof title === "string") item.title = title.trim();
-    if (typeof description === "string") item.description = description.trim();
+    if (isText(title)) item.title = title;
+    if (isText(description)) item.description = description;
     await store.writeGallery(gallery);
     res.json(item);
   } catch (err) {
