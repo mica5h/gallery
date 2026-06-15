@@ -9,6 +9,30 @@ so uploaded images in `uploads/` and the JSON store in `data/` survive restarts.
 
 ---
 
+## Connection details (this deployment)
+
+| | |
+|---|---|
+| SSH | `ssh -p 14206 app@ssh.rosti.cz` |
+| SSH URI | `ssh://app@ssh.rosti.cz:14206` |
+| SFTP URI | `sftp://app@ssh.rosti.cz:14206` |
+| App dir | `/srv/app` |
+| Logs | `/srv/log/node.log` |
+
+Throughout this guide, `<PORT>` is **14206** and the host is `ssh.rosti.cz` (user `app`).
+
+### Reset the admin password to `admin` / `changeme`
+
+Backs up the current users file, writes a fresh bcrypt hash, and restarts:
+
+```bash
+ssh -p 14206 app@ssh.rosti.cz 'cd /srv/app && cp -a data/users.json data/users.json.bak-$(date +%Y%m%d-%H%M%S) && node -e "const b=require(\"bcryptjs\"),fs=require(\"fs\");fs.writeFileSync(\"data/users.json\",JSON.stringify({users:[{username:\"admin\",passwordHash:b.hashSync(\"changeme\",10)}]},null,2)+\"\n\")" && supervisorctl restart app && supervisorctl status app'
+```
+
+Then log in at `/admin` and change it via **Change password**.
+
+---
+
 ## 1. Create the application
 
 1. Sign up at <https://rosti.cz> and start the 30-day trial.
