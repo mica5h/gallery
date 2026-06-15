@@ -186,3 +186,34 @@ in git.
 > https://<PAT>@github.com/mica5h/gallery.git && git fetch origin && git reset
 > origin/main && git checkout -- .`. Untracked `data/` and `uploads/` are left
 > untouched, and future updates become a plain `git pull`.
+
+### Deliberately pushing content (`data/gallery.json` + images)
+
+The rule above — *never copy `data/` or `uploads/`* — protects content edited
+**on the server** via the admin panel. If instead you curated the content
+**locally** and want to publish it, you can push it, but mind two things:
+
+1. **It overwrites live content.** `scp`-ing `data/gallery.json` replaces whatever
+   is live (including admin-panel edits). Back up the remote copy first:
+
+   ```bash
+   ssh -p <PORT> app@ssh.rosti.cz 'cd /srv/app && cp -a data/gallery.json data/gallery.json.bak-$(date +%Y%m%d-%H%M%S)'
+   scp -P <PORT> data/gallery.json app@ssh.rosti.cz:/srv/app/data/gallery.json
+   ssh -p <PORT> app@ssh.rosti.cz 'supervisorctl restart app'
+   ```
+
+2. **Ship the images it references, too.** `gallery.json` points at files in
+   `uploads/`. Pushing the JSON without the new images leaves them **404** (broken
+   thumbnails, blank work tiles). `scp` every newly-referenced file:
+
+   ```bash
+   scp -P <PORT> uploads/<new-image>.jpg app@ssh.rosti.cz:/srv/app/uploads/
+   ```
+
+   Verify each one serves before calling it done:
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' https://<your-domain>/uploads/<new-image>.jpg
+   ```
+
+   Static files need no restart — only `data/*.json` changes do.
