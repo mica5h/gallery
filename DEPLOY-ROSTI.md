@@ -124,13 +124,65 @@ info, the Google Drive link (for the menu QR), and upload the real artworks.
 
 ## Updating later
 
+If you deployed by **cloning the repo** (step 3, primary path), updates are a
+`git pull`:
+
 ```bash
 ssh -p <PORT> app@ssh.rosti.cz
 cd /srv/app
 git pull
-npm install --omit=dev
+npm install --omit=dev          # only needed if package.json changed
 supervisorctl restart app
 ```
 
 Your `data/*.json` and `uploads/` are gitignored, so `git pull` never touches
 the live content or images.
+
+### Updating an scp-deployed app (no `.git` on the server)
+
+If you uploaded with `scp` (the alternative in step 3), `/srv/app` is **not** a
+git repository and `git pull` fails with `fatal: not a git repository`. Update by
+copying only the source files that changed, straight from your laptop. **Never
+copy `data/` or `uploads/`** — those hold the live content and images and are not
+in git.
+
+1. From your local repo, find what changed since the deployed version:
+
+   ```bash
+   git diff --stat <deployed-commit> HEAD     # or: git log --oneline
+   ```
+
+2. `scp` each changed file to the same path under `/srv/app` (the port is the
+   per-app SSH port from the Rosti admin panel → app detail):
+
+   ```bash
+   scp -P <PORT> public/js/main.js     app@ssh.rosti.cz:/srv/app/public/js/main.js
+   scp -P <PORT> public/css/styles.css app@ssh.rosti.cz:/srv/app/public/css/styles.css
+   scp -P <PORT> public/index.html     app@ssh.rosti.cz:/srv/app/public/index.html
+   scp -P <PORT> server.js             app@ssh.rosti.cz:/srv/app/server.js
+   ```
+
+   > Tip: back up the files you're about to overwrite first, e.g.
+   > `ssh -p <PORT> app@ssh.rosti.cz 'cd /srv/app && cp -a --parents server.js public .deploy-backup/'`
+
+3. If `package.json` / `package-lock.json` changed, reinstall deps on the server:
+
+   ```bash
+   ssh -p <PORT> app@ssh.rosti.cz 'cd /srv/app && npm install --omit=dev'
+   ```
+
+4. Restart and verify:
+
+   ```bash
+   ssh -p <PORT> app@ssh.rosti.cz 'supervisorctl restart app && supervisorctl status app'
+   ```
+
+   Optionally confirm an upload is byte-identical by comparing checksums —
+   `md5sum <file>` on the server should match `md5 -q <file>` (macOS) /
+   `md5sum <file>` (Linux) locally.
+
+> **Want `git pull` updates instead?** Convert the directory to a real checkout
+> once: on the server, `cd /srv/app && git init && git remote add origin
+> https://<PAT>@github.com/mica5h/gallery.git && git fetch origin && git reset
+> origin/main && git checkout -- .`. Untracked `data/` and `uploads/` are left
+> untouched, and future updates become a plain `git pull`.
