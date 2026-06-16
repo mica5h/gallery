@@ -13,20 +13,27 @@ so uploaded images in `uploads/` and the JSON store in `data/` survive restarts.
 
 | | |
 |---|---|
-| SSH | `ssh -p 14206 app@ssh.rosti.cz` |
-| SSH URI | `ssh://app@ssh.rosti.cz:14206` |
-| SFTP URI | `sftp://app@ssh.rosti.cz:14206` |
+| SSH | `ssh -p 13048 app@ssh.rosti.cz` |
+| SSH URI | `ssh://app@ssh.rosti.cz:13048` |
+| SFTP URI | `sftp://app@ssh.rosti.cz:13048` |
+| Domain | `https://rubart-9048.rostiapp.cz` |
 | App dir | `/srv/app` |
 | Logs | `/srv/log/node.log` |
 
-Throughout this guide, `<PORT>` is **14206** and the host is `ssh.rosti.cz` (user `app`).
+Throughout this guide, `<PORT>` is **13048** and the host is `ssh.rosti.cz` (user `app`).
+
+> **Note:** Rosti trial apps are deleted when the trial ends — the SSH **port and
+> subdomain change** each time you create a new app. If SSH gives
+> `kex_exchange_identification: read: Connection reset by peer` and the site serves
+> a self-signed cert, the container is gone; create a fresh Node.js app in the panel
+> and redeploy with the new port/domain.
 
 ### Reset the admin password to `admin` / `changeme`
 
 Backs up the current users file, writes a fresh bcrypt hash, and restarts:
 
 ```bash
-ssh -p 14206 app@ssh.rosti.cz 'cd /srv/app && cp -a data/users.json data/users.json.bak-$(date +%Y%m%d-%H%M%S) && node -e "const b=require(\"bcryptjs\"),fs=require(\"fs\");fs.writeFileSync(\"data/users.json\",JSON.stringify({users:[{username:\"admin\",passwordHash:b.hashSync(\"changeme\",10)}]},null,2)+\"\n\")" && supervisorctl restart app && supervisorctl status app'
+ssh -p 13048 app@ssh.rosti.cz 'cd /srv/app && cp -a data/users.json data/users.json.bak-$(date +%Y%m%d-%H%M%S) && node -e "const b=require(\"bcryptjs\"),fs=require(\"fs\");fs.writeFileSync(\"data/users.json\",JSON.stringify({users:[{username:\"admin\",passwordHash:b.hashSync(\"changeme\",10)}]},null,2)+\"\n\")" && supervisorctl restart app && supervisorctl status app'
 ```
 
 Then log in at `/admin` and change it via **Change password**.
@@ -61,8 +68,12 @@ is **private**, use a GitHub Personal Access Token (PAT) with `repo` scope:
 cd /srv
 rm -rf app && mkdir app && cd app
 git clone https://<YOUR_PAT>@github.com/mica5h/gallery.git .
-git checkout feature/artist-presentation   # or main, once merged
+git checkout main
 ```
+
+> Afterwards, **scrub the token** from the saved remote so it isn't stored on the
+> server: `git remote set-url origin https://github.com/mica5h/gallery.git`.
+> Then **revoke the PAT** on GitHub — it traveled to the server inside the clone URL.
 
 > Alternative without a PAT: from your laptop, `scp -P <PORT> -r ./gallery/* app@ssh.rosti.cz:/srv/app/`
 > (don't copy `node_modules/`).
@@ -76,8 +87,9 @@ npm install --omit=dev
 
 ## 5. Configure environment variables
 
-Rosti requires the app to listen on **port 8080**, and you want a stable session
-secret. Create `/srv/app/.env`:
+Rosti's nginx fronts the app: it listens on `:8000` and **proxies to
+`127.0.0.1:8080`** (see `/srv/conf/nginx.d/app.conf`), so the app **must listen on
+port 8080**. You also want a stable session secret. Create `/srv/app/.env`:
 
 ```bash
 cat > /srv/app/.env <<'ENV'
@@ -85,6 +97,7 @@ PORT=8080
 NODE_ENV=production
 SESSION_SECRET=CHANGE_ME_to_a_long_random_string
 ENV
+chmod 600 /srv/app/.env
 ```
 
 Generate a good secret with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
@@ -93,40 +106,51 @@ Generate a good secret with: `node -e "console.log(require('crypto').randomBytes
 
 ## 6. Make supervisor load the .env and start the app
 
-Rosti runs the app under **supervisord**. Edit its config so Node loads `.env`:
+Rosti runs the app under **supervisord**. The program is defined in
+`/srv/conf/supervisor.d/node.conf` (program name `[program:app]`) and ships running
+`npm start`, which would launch the app on its default port (3000) — wrong for the
+nginx proxy. Point it at Node directly with `--env-file` so `PORT=8080` is set:
 
 ```bash
-nano /srv/conf/supervisor.d/app.conf
+nano /srv/conf/supervisor.d/node.conf
 ```
 
-Set the `command` line to:
+Set the `command` line to (keep the existing `environment=PATH=...` and other
+lines as-is):
 
 ```ini
-[program:app]
-command=/opt/node/bin/node --env-file=/srv/app/.env /srv/app/server.js
-directory=/srv/app
-autostart=true
-autorestart=true
-stdout_logfile=/srv/log/node.log
-redirect_stderr=true
+command=/srv/bin/primary_tech/node --env-file=/srv/app/.env /srv/app/server.js
 ```
 
-> `--env-file` needs Node ≥ 20.6 (use Node 22 from step 2 to be safe).
-> Don't want to edit the command? Instead add the vars to an `environment=`
-> line in the same file, e.g. `environment=PORT="8080",NODE_ENV="production",SESSION_SECRET="..."`.
+> The Node binary on Rosti lives at `/srv/bin/primary_tech/node` (not `/opt/node`).
+> `--env-file` needs Node ≥ 20.6 — the runtime ships Node ≥ 26, so you're fine.
+> Don't want to edit the command? Instead add the vars to the `environment=`
+> line, e.g. `environment=PATH="...",PORT="8080",NODE_ENV="production",SESSION_SECRET="..."`.
 
-Apply and (re)start:
+> ⚠️ **Do NOT leave `*.bak`/`*.orig` files in `/srv/conf/supervisor.d/`.** The
+> include is a wildcard — `files = /srv/conf/supervisor.d/*` — so a `node.conf.bak`
+> is *also* loaded and, being read last, **silently overrides** your edited
+> `node.conf` (the app comes back up on the old command / wrong port). Keep backups
+> elsewhere, e.g. `mv node.conf.bak /srv/conf/node.conf.orig.bak`.
+
+Apply and (re)start. Because the **command line changed**, a plain `restart` is not
+enough (`reread`/`update` may report *"No config updates to processes"*) — do a full
+reload so supervisord adopts the new command:
 
 ```bash
-supervisorctl reread
-supervisorctl update
-supervisorctl restart app
-supervisorctl status app          # should show RUNNING
-tail -f /srv/log/node.log         # watch startup logs
+supervisorctl reload
+supervisorctl status               # app should show RUNNING
+ps aux | grep '[s]erver.js'        # confirm it runs node --env-file ... server.js
+tail -f /srv/log/node.log          # watch startup logs
 ```
 
-On first boot the server seeds the artist content and a default admin user.
-You should see `Storage backend: local` and `Gallery running ...` in the log.
+On first boot the server seeds the artist content and a default admin user. You
+should see `Storage backend: local` and `Gallery running at http://localhost:8080`
+(port **8080**, not 3000) in the log. Verify the public site:
+
+```bash
+curl -s -o /dev/null -w 'HTTP %{http_code}\n' https://rubart-9048.rostiapp.cz/   # expect 200
+```
 
 ## 7. Point your domain
 
@@ -143,6 +167,34 @@ Open `https://<your-domain>/admin` and log in with the seeded credentials:
 
 Immediately use **Change password** in the admin panel. Then update the site
 info, the Google Drive link (for the menu QR), and upload the real artworks.
+
+---
+
+## Snapshots / backups
+
+Two complementary options:
+
+**Platform snapshot (panel-only).** Rosti's native snapshot/backup is triggered
+from the **admin panel** (your app → *Backups* / *Snapshots*). The on-server `rosti`
+CLI is only a runtime manager (`rosti node`, `rosti redis`, …) — it has **no
+snapshot command**, so this can't be done over SSH.
+
+**Manual archive (over SSH).** Snapshot the deployed app — code plus the live
+`data/` and `uploads/` — into `/srv/snapshots/`, excluding the bulky/regenerable
+`node_modules` and `.git`:
+
+```bash
+ssh -p 13048 app@ssh.rosti.cz 'mkdir -p /srv/snapshots && TS=$(date +%Y%m%d-%H%M%S) && tar czf /srv/snapshots/app-snapshot-$TS.tar.gz --exclude=node_modules --exclude=.git -C /srv/app . && ls -lh /srv/snapshots/'
+```
+
+To pull a snapshot down to your laptop:
+
+```bash
+scp -P 13048 'app@ssh.rosti.cz:/srv/snapshots/app-snapshot-*.tar.gz' ./
+```
+
+> The persistent disk is small (1 GB on the *Small* package). Prune old archives
+> periodically: `ssh -p 13048 app@ssh.rosti.cz 'ls -t /srv/snapshots/*.tar.gz | tail -n +6 | xargs -r rm'`.
 
 ---
 
