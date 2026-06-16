@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Local snapshot/backup archives (contain data/ + uploads/, i.e. live content & secrets)
+snapshots/
+
 # Runtime data (uploaded images + JSON store, including seeded credentials)
 uploads/*
 !uploads/.gitkeep
